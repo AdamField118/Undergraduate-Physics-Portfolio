@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Simulations</title>
+    <link rel="stylesheet" href="sims.css">
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1>Simulations</h1>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="sims.html">Simulations</a>
+        <a href="videos.html">Videos</a>
+        <a href="about.html">About</a>
+    </nav>
+
+    <!-- Filter Dropdown -->
+    <section class="filter-section">
+        <label for="filter">Filter by Topic:</label>
+        <select id="filter" class="filter-select">
+            <option value="all">All</option>
+            <option value="motion">Motion and Forces</option>
+            <option value="energy">Energy and Work</option>
+            <option value="electricity">Electricity and Magnetism</option>
+            <option value="waves">Waves and Sound</option>
+        </select>
+    </section>
+
+    <!-- Simulations Section -->
+    <section class="simulations-container">
+        <div class="simulation-card" data-topic="motion">
+            <a href="stage.html?simulation=motion">
+                <img src="images/motion.png" alt="Motion Simulation">
+            </a>
+            <h3>Motion Simulation</h3>
+            <p>Explore forces and motion.</p>
+        </div>
+
+        <div class="simulation-card" data-topic="energy">
+            <a href="stage.html?simulation=energy">
+                <img src="images/energy-simulation.jpg" alt="Energy Simulation">
+            </a>
+            <h3>Energy Simulation</h3>
+            <p>Understand energy transfer and work.</p>
+        </div>
+
+        <div class="simulation-card" data-topic="electricity">
+            <a href="stage.html?simulation=electricity">
+                <img src="images/Electric_Energy.jpg" alt="Electricity Simulation">
+            </a>
+            <h3>Electricity Simulation</h3>
+            <p>Learn about electricity and circuits.</p>
+        </div>
+
+        <div class="simulation-card" data-topic="waves">
+            <a href="stage.html?simulation=waves">
+                <img src="images/waves-simulation.jpg" alt="Waves Simulation">
+            </a>
+            <h3>Waves Simulation</h3>
+            <p>Discover how waves propagate.</p>
+        </div>
+
+        <div class="simulation-card" data-topic="motion">
+            <a href="stage.html?simulation=forces">
+                <img src="images/forces-simulation.jpg" alt="Forces Simulation">
+            </a>
+            <h3>Forces Simulation</h3>
+            <p>Visualize different forces in action.</p>
+        </div>
+
+        <div class="simulation-card" data-topic="energy">
+            <a href="stage.html?simulation=work">
+                <img src="images/work-power-simulation.jpg" alt="Work and Power Simulation">
+            </a>
+            <h3>Work and Power Simulation</h3>
+            <p>Analyze how work and power relate to energy.</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>Created by Adam Field</p>
+    </footer>
+
+    <script src="sims.js"></script>
+</body>
+</html>
