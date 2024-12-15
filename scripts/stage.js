@@ -10,6 +10,7 @@ document.title = simulationName;
 if (simulationName) {
     // Construct the path to the corresponding .js file
     const scriptPath = `../scripts/${simulationName}.js`;
+    document.title = simulationName;
 
     // Dynamically create a <script> element to load the .js file
     const script = document.createElement('script');
