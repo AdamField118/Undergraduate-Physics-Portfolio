@@ -36,6 +36,7 @@ footer {
     padding: 10px;
     position: fixed;
     bottom: 0;
+    height: 50px;
     width: 100%;
 }
 footer p {
@@ -63,7 +64,7 @@ p {
 }
 #simulation-container {
     margin-top: 60px; /* Adjust this value based on the height of your nav bar */
-    padding: 20px; /* Add padding if needed */
+    padding: 0px; /* Add padding if needed */
 }
 #simulation {
     position: relative;

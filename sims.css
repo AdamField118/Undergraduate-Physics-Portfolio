@@ -76,10 +76,7 @@ footer {
     background-color: #00458b;
     color: #fff;
     text-align: center;
-    padding: 10px;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
+    padding: 10px 0;
 }
 
 /* Navigation Bar */
