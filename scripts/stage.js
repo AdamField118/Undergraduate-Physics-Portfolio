@@ -5,6 +5,7 @@ const urlParams = new URLSearchParams(queryString);
 
 // Extract the "simulation" parameter
 const simulationName = urlParams.get('simulation');
+document.title = simulationName;
 
 if (simulationName) {
     // Construct the path to the corresponding .js file
