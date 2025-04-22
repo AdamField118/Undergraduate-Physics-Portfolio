@@ -7,13 +7,13 @@ document.body.appendChild(angle);
 const n0 = document.createElement('input');
 n0.id = 'n0';
 n0.type = 'number';
-n0.placeholder = 'n0 here, starts n0=1';
+n0.placeholder = 'n\u2080 here, starts n\u2080=1';
 document.body.appendChild(n0);
 
 const n1 = document.createElement('input');
 n1.id = 'n1';
 n1.type = 'number';
-n1.placeholder = 'n1 here, starts n1=1.5';
+n1.placeholder = 'n\u2081 here, starts n\u2081=1.5';
 document.body.appendChild(n1);
 
 const refresh = document.createElement('button');
@@ -51,7 +51,7 @@ ctx.stroke();
 ctx.setLineDash([5, 5]);
 ctx.beginPath();
 ctx.moveTo((canvas.width / 2), 0);
-ctx.lineTo((canvas.width / 2), canvas.height - 50);
+ctx.lineTo((canvas.width / 2), canvas.height - 10);
 ctx.stroke();
 ctx.setLineDash([]);
 
@@ -90,8 +90,8 @@ ctx.strokeStyle = 'red';
 ctx.stroke();
 
 //labels
-ctx.fillText('n0', 10, 180);
-ctx.fillText('n1', 10, 210);
+ctx.fillText('n\u2080', 10, 180);
+ctx.fillText('n\u2081', 10, 210);
 ctx.fillStyle = 'blue';
 ctx.fillText('Incident Ray', startX - 30, startY - 10);
 ctx.fillStyle = 'green';
@@ -113,7 +113,7 @@ function reload(){
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
     ctx.moveTo((canvas.width / 2), 0);
-    ctx.lineTo((canvas.width / 2), canvas.height);
+    ctx.lineTo((canvas.width / 2), canvas.height - 10);
     ctx.stroke();
     ctx.setLineDash([]);
 
@@ -153,14 +153,14 @@ function reload(){
 
     //labels
     ctx.fillStyle = 'black';
-    ctx.fillText('n0', 10, 180);
-    ctx.fillText('n1', 10, 210);
+    ctx.fillText('n\u2080', 10, 180);
+    ctx.fillText('n\u2081', 10, 210);
     ctx.fillStyle = 'blue';
-    ctx.fillText('Incident Ray', startX - 30, startY - 10);
+    ctx.fillText('Incident Ray', startX - 30, Math.max(startY - 10, 10));
     ctx.fillStyle = 'green';
-    ctx.fillText('Reflected Ray', endXR - 30, endYR - 10);
+    ctx.fillText('Reflected Ray', endXR - 30, Math.max(endYR - 10, 10));
     ctx.fillStyle = 'red';
-    ctx.fillText('Refracted Ray', endXT - 30, endYT + 10);
+    ctx.fillText('Refracted Ray', endXT - 30, Math.min(endYT + 10, canvas.height - 10));
 }
 
 refresh.addEventListener("click", reload);

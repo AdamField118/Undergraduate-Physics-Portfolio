@@ -85,3 +85,12 @@ nav a:hover {
     background-color: #002244;
     border-radius: 5px;
 }
+/* Focus and Hover States for Links */
+a:focus, button:focus {
+    outline: 2px dashed #ffdd57;
+    outline-offset: 4px;
+}
+
+a:hover, a:focus {
+    color: #ffdd57;
+}

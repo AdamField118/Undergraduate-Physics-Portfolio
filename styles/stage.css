@@ -97,3 +97,12 @@ p {
     color: #d9534f;
     font-weight: bold;
 }
+/* Focus and Hover States for Links */
+a:focus {
+    outline: 2px dashed #ffdd57;
+    outline-offset: 4px;
+}
+
+a:hover, a:focus {
+    color: #ffdd57;
+}
