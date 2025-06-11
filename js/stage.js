@@ -9,17 +9,17 @@ document.title = simulationName;
 
 if (simulationName) {
     // Construct the path to the corresponding .js file
-    const scriptPath = `../scripts/${simulationName}.js`;
+    const scriptPath = `../js/${simulationName}.js`;
     document.title = simulationName;
 
     // Dynamically create a <script> element to load the .js file
     const script = document.createElement('script');
     script.src = scriptPath;
     script.onload = () => {
-        console.log(`../scripts/${simulationName}.js loaded successfully.`);
+        console.log(`../js/${simulationName}.js loaded successfully.`);
     };
     script.onerror = () => {
-        console.error(`Error loading ../scripts/${simulationName}.js`);
+        console.error(`Error loading ../js/${simulationName}.js`);
     };
 
     // Append the script to the document body
