@@ -163,6 +163,11 @@ nav a:hover {
     display: block;
 }
 
+.card iframe {
+    width: 100%; /* Full width of the card */
+    height: 280px; /* Maintain aspect ratio */
+}
+
 .card:hover, .card:focus {
     transform: scale(1.05); /* Increase size on hover */
     z-index: 10; /* Bring to the front on hover */
