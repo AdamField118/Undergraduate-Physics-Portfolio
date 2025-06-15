@@ -1,7 +1,7 @@
 const container = document.getElementById('simulation-container');
 
 const gui = document.createElement('gui');
-gui.style = 'position: absolute; left: 0px;';
+gui.style = 'position: fixed; left: 0px; margin-top: 70px;';
 
 const angle = document.createElement('input');
 angle.id = 'angle';
