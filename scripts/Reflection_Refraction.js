@@ -1,30 +1,36 @@
+const container = document.getElementById('simulation-container');
+
+const gui = document.createElement('gui');
+gui.style = 'position: absolute; left: 0px;';
+
 const angle = document.createElement('input');
 angle.id = 'angle';
 angle.type = 'number';
 angle.placeholder = 'Incident angle, starts 45';
-document.body.appendChild(angle);
+gui.appendChild(angle);
 
 const n0 = document.createElement('input');
 n0.id = 'n0';
 n0.type = 'number';
 n0.placeholder = 'n\u2080 here, starts n\u2080=1';
-document.body.appendChild(n0);
+gui.appendChild(n0);
 
 const n1 = document.createElement('input');
 n1.id = 'n1';
 n1.type = 'number';
 n1.placeholder = 'n\u2081 here, starts n\u2081=1.5';
-document.body.appendChild(n1);
+gui.appendChild(n1);
 
 const refresh = document.createElement('button');
-refresh.style = 'height:25px;width:100px';
 refresh.textContent = 'RELOAD';
-document.body.appendChild(refresh);
+gui.appendChild(refresh);
+
+container.appendChild(gui);
 
 const canvas = document.createElement('canvas');
 canvas.width = 800;
 canvas.height = 380;
-document.body.appendChild(canvas);
+container.appendChild(canvas);
 
 function center() {
     canvas.style.position = "absolute";
