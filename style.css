@@ -71,6 +71,7 @@ nav a {
 nav a:hover {
     background-color: #002244;
     border-radius: 5px;
+    color: #ffdd57;
 }
 
 /* Main Container */
@@ -153,6 +154,7 @@ nav a:hover {
 
 .card a {
     display: block;
+    color: #333;
     text-decoration: none;
 }
 
@@ -257,8 +259,4 @@ button:focus, .btn:focus {
 a:focus, button:focus {
     outline: 2px dashed #ffdd57;
     outline-offset: 4px;
-}
-
-a:hover, a:focus {
-    color: #ffdd57;
 }

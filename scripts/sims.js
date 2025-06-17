@@ -1,26 +1,26 @@
-document.addEventListener("DOMContentLoaded", function() {
-    const filterSelect = document.getElementById("filter");
-    const simulationCards = document.querySelectorAll(".simulation-card");
+// Filter functionality
+document.getElementById('filter').addEventListener('change', function() {
+    const filter = this.value;
+    const cards = document.querySelectorAll('.card');
+    
+    cards.forEach(card => {
+        if (filter === 'all' || card.dataset.topic === filter) {
+            card.style.display = 'inline-block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
 
-    // Function to filter simulations
-    function filterSimulations() {
-        const selectedTopic = filterSelect.value;
-
-        simulationCards.forEach(card => {
-            // Show all if "all" is selected
-            if (selectedTopic === "all") {
-                card.style.display = "block";
-            } else {
-                // Show only matching simulations based on data-topic attribute
-                if (card.getAttribute("data-topic") === selectedTopic) {
-                    card.style.display = "block";
-                } else {
-                    card.style.display = "none";
-                }
+// Keyboard accessibility for cards
+document.querySelectorAll('.card').forEach(card => {
+    card.setAttribute('tabindex', '0');
+    card.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            const link = this.querySelector('a');
+            if (link) {
+                window.location.href = link.href;
             }
-        });
-    }
-
-    // Listen for changes in the dropdown and filter accordingly
-    filterSelect.addEventListener("change", filterSimulations);
+        }
+    });
 });
