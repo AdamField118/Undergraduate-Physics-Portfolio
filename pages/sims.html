@@ -20,11 +20,12 @@
         <a href="../pages/about.html">About</a>
     </nav>
 
+    <!-- Filter Dropdown -->
     <section class="filter-section">
         <label for="filter">Filter by Topic:</label>
         <select id="filter" class="filter-select">
             <option value="all">All</option>
-            <option value="electricity">Electricity and Magnetism</option>
+            <option value="em">Electricity and Magnetism</option>
             <option value="ocw">Oscillations and Waves</option>
             <option value="astro">Astrophysics</option>
             <option value="misc">Miscellaneous</option>
@@ -42,7 +43,7 @@
             </a>
         </div>
         
-        <div class="card" data-topic="electricity">
+        <div class="card" data-topic="em">
             <a href="../pages/stage.html?simulation=RLC">
                 <img src="../images/rlc.png" alt="RLC Circuit Simulation">
                 <div class="card-content">
@@ -68,6 +69,6 @@
         <p>Created by Adam Field</p>
     </footer>
 
-    <script src="../scripts/sims.js"></script>
+    <script src="../scripts/filter.js"></script>
 </body>
 </html>
