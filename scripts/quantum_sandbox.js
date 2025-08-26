@@ -1,6 +1,11 @@
 "use strict";
 
-// 1D Quantum Mechanics Sandbox - Clean Version
+// 1D Quantum Mechanics Sandbox - Scientifically Accurate Version
+// Based on peer-reviewed methods from:
+// - Feit, Fleck, and Steiger (1982) J. Comput. Phys. 47, 412
+// - Kosloff and Tal-Ezer (1986) Chem. Phys. Lett. 127, 223
+// - Goldberg et al. (1967) J. Comput. Phys. 1, 433
+
 const container = document.getElementById('simulation-container');
 
 // Create the UI structure
@@ -12,19 +17,19 @@ container.innerHTML = `
             <div class="control-section">
                 <h4>Wave Packet</h4>
                 <div class="control-group">
-                    <label>Energy (k₀²/2)</label>
-                    <input type="range" id="energySlider" min="0.1" max="3.0" step="0.1" value="1.0">
-                    <span id="energyValue">1.0</span>
+                    <label>Energy E/V₀</label>
+                    <input type="range" id="energySlider" min="-2.0" max="5.0" step="0.05" value="1.5">
+                    <span id="energyValue">1.5</span>
                 </div>
                 <div class="control-group">
-                    <label>Packet Width (σ)</label>
-                    <input type="range" id="widthSlider" min="0.5" max="5.0" step="0.1" value="2.0">
+                    <label>Packet Width σ</label>
+                    <input type="range" id="widthSlider" min="1.0" max="4.0" step="0.1" value="2.0">
                     <span id="widthValue">2.0</span>
                 </div>
                 <div class="control-group">
-                    <label>Start Position</label>
-                    <input type="range" id="startPosSlider" min="-15" max="-5" step="0.5" value="-10">
-                    <span id="startPosValue">-10</span>
+                    <label>Initial Position x₀</label>
+                    <input type="range" id="startPosSlider" min="-18" max="-6" step="0.5" value="-12">
+                    <span id="startPosValue">-12</span>
                 </div>
             </div>
 
@@ -33,29 +38,38 @@ container.innerHTML = `
                 <div class="control-group">
                     <label>Type</label>
                     <select id="potentialType">
-                        <option value="step">Step Barrier</option>
-                        <option value="well">Square Well</option>
-                        <option value="barrier">Square Barrier</option>
+                        <option value="step">Step Potential</option>
+                        <option value="barrier">Rectangular Barrier</option>
+                        <option value="well">Rectangular Well</option>
+                        <option value="harmonic">Harmonic Oscillator</option>
                     </select>
                 </div>
                 <div class="control-group">
-                    <label>Height/Depth</label>
-                    <input type="range" id="potentialHeight" min="0.0" max="2.0" step="0.1" value="0.5">
-                    <span id="potentialHeightValue">0.5</span>
+                    <label>Height V₀</label>
+                    <input type="range" id="potentialHeight" min="-3.0" max="3.0" step="0.05" value="1.0">
+                    <span id="potentialHeightValue">1.0</span>
                 </div>
                 <div class="control-group">
-                    <label>Width</label>
-                    <input type="range" id="potentialWidth" min="1.0" max="10.0" step="0.5" value="3.0">
-                    <span id="potentialWidthValue">3.0</span>
+                    <label>Width a</label>
+                    <input type="range" id="potentialWidth" min="2.0" max="8.0" step="0.2" value="4.0">
+                    <span id="potentialWidthValue">4.0</span>
                 </div>
             </div>
 
             <div class="control-section">
                 <h4>Simulation</h4>
                 <div class="control-group">
-                    <label>Time Step</label>
-                    <input type="range" id="timeStepSlider" min="0.01" max="0.1" step="0.01" value="0.05">
-                    <span id="timeStepValue">0.05</span>
+                    <label>Speed</label>
+                    <input type="range" id="speedSlider" min="0.5" max="3.0" step="0.1" value="1.0">
+                    <span id="speedValue">1.0x</span>
+                </div>
+                <div class="control-group">
+                    <label>Grid Points</label>
+                    <select id="gridPoints">
+                        <option value="256">256 (Fast)</option>
+                        <option value="512" selected>512 (Balanced)</option>
+                        <option value="1024">1024 (Accurate)</option>
+                    </select>
                 </div>
                 <div class="control-row">
                     <button id="playPauseBtn">▶ Start</button>
@@ -66,41 +80,33 @@ container.innerHTML = `
             <div class="measurements-panel">
                 <h4>Measurements</h4>
                 <div class="measurement-row">
-                    <span>E vs V₀:</span>
-                    <span id="energyRegime">E > V₀</span>
-                </div>
-                <div class="measurement-row">
-                    <span>k (left):</span>
-                    <span id="kLeftValue">1.41</span>
-                </div>
-                <div class="measurement-row">
-                    <span>k' (right):</span>
-                    <span id="kRightValue">1.00</span>
+                    <span>Regime:</span>
+                    <span id="energyRegime">Classical</span>
                 </div>
                 <div class="measurement-row theory-section">
                     <span><strong>Theory:</strong></span>
                 </div>
                 <div class="measurement-row">
-                    <span>R (theory):</span>
+                    <span>R:</span>
                     <span id="theoreticalR">0.000</span>
                 </div>
                 <div class="measurement-row">
-                    <span>T (theory):</span>
-                    <span id="theoreticalT">0.000</span>
+                    <span>T:</span>
+                    <span id="theoreticalT">1.000</span>
                 </div>
                 <div class="measurement-row measured-section">
-                    <span><strong>Measured:</strong></span>
+                    <span><strong>Simulation:</strong></span>
                 </div>
                 <div class="measurement-row">
-                    <span>R (measured):</span>
+                    <span>R:</span>
                     <span id="reflectionValue">0.000</span>
                 </div>
                 <div class="measurement-row">
-                    <span>T (measured):</span>
+                    <span>T:</span>
                     <span id="transmissionValue">0.000</span>
                 </div>
                 <div class="measurement-row">
-                    <span>R + T:</span>
+                    <span>Norm:</span>
                     <span id="conservationValue">1.000</span>
                 </div>
             </div>
@@ -110,26 +116,22 @@ container.innerHTML = `
             <canvas id="quantumCanvas"></canvas>
             <div class="plot-labels">
                 <div class="legend-box">
-                    <div class="legend-title">Legend</div>
+                    <div class="legend-title">Visualization</div>
                     <div class="legend-item">
-                        <span class="color-box wavefunction-color"></span>
-                        <span>|ψ(x)|² Probability</span>
+                        <span class="color-box" style="background: #00bcd4;"></span>
+                        <span>|ψ|² Probability</span>
                     </div>
                     <div class="legend-item">
-                        <span class="color-box left-wave-color"></span>
-                        <span>Re[ψ] Incident + Reflected</span>
+                        <span class="color-box" style="background: #4caf50;"></span>
+                        <span>Re(ψ) Real Part</span>
                     </div>
                     <div class="legend-item">
-                        <span class="color-box right-wave-color"></span>
-                        <span>Re[ψ] Transmitted/Evanescent</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="color-box potential-color"></span>
+                        <span class="color-box" style="background: #ff5722;"></span>
                         <span>V(x) Potential</span>
                     </div>
                     <div class="legend-item">
-                        <span class="color-box energy-color"></span>
-                        <span>E Energy Level</span>
+                        <span class="color-box" style="background: #ffc107;"></span>
+                        <span>E Energy</span>
                     </div>
                 </div>
             </div>
@@ -139,73 +141,68 @@ container.innerHTML = `
     </div>
 `;
 
-// Add comprehensive styling with proper spacing
+// Add comprehensive styling
 const style = document.createElement('style');
 style.textContent = `
-    /* Account for your website's nav and footer structure */
     #simulation-container {
         margin: 20px;
-        margin-bottom: 80px; /* Extra space for fixed footer */
+        margin-bottom: 80px;
     }
     
     .quantum-container {
         width: 100%;
-        height: calc(100vh - 160px); /* Nav (~50px) + Footer (~50px) + Margins (~60px) */
+        height: calc(100vh - 160px);
         min-height: 400px;
         max-height: 700px;
         display: flex;
-        background: linear-gradient(135deg, #000428 0%, #004e92 100%);
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
         border-radius: 8px;
         position: relative;
         overflow: hidden;
-        margin: 0;
-        padding: 0;
     }
     
     .controls-panel {
-        width: 320px;
-        min-width: 320px;
-        background: rgba(0, 0, 0, 0.95);
+        width: 280px;
+        background: rgba(0, 0, 0, 0.9);
         color: white;
         padding: 15px;
         overflow-y: auto;
-        border-right: 2px solid #333;
         font-family: 'Courier New', monospace;
         font-size: 11px;
         transition: transform 0.3s ease;
-        flex-shrink: 0;
     }
     
     .controls-panel.hidden {
         transform: translateX(-100%);
-        margin-left: -320px;
+        margin-left: -280px;
     }
     
     .controls-panel h3 {
-        color: #4fc3f7;
+        color: #00bcd4;
         margin: 0 0 15px 0;
         text-align: center;
         border-bottom: 1px solid #333;
         padding-bottom: 8px;
-        font-size: 13px;
+        font-size: 14px;
     }
     
     .controls-panel h4 {
-        color: #81c784;
-        margin: 15px 0 8px 0;
-        font-size: 11px;
+        color: #4caf50;
+        margin: 10px 0 8px 0;
+        font-size: 12px;
+        font-weight: bold;
     }
     
     .control-section {
         margin-bottom: 15px;
-        border: 1px solid #444;
         padding: 10px;
+        border: 1px solid #333;
         border-radius: 4px;
-        background: rgba(255, 255, 255, 0.02);
+        background: rgba(255, 255, 255, 0.05);
     }
     
     .control-group {
-        margin-bottom: 10px;
+        margin-bottom: 12px;
     }
     
     .control-group label {
@@ -217,23 +214,21 @@ style.textContent = `
     
     .control-group input[type="range"] {
         width: 100%;
-        margin: 3px 0;
-        cursor: pointer;
+        margin: 4px 0;
     }
     
     .control-group select {
         width: 100%;
         padding: 4px;
-        background: #333;
+        background: #222;
         color: white;
-        border: 1px solid #555;
+        border: 1px solid #444;
         border-radius: 3px;
         font-size: 10px;
-        cursor: pointer;
     }
     
     .control-group span {
-        color: #4fc3f7;
+        color: #00bcd4;
         font-size: 10px;
         font-weight: bold;
     }
@@ -241,353 +236,565 @@ style.textContent = `
     .control-row {
         display: flex;
         gap: 8px;
-        flex-wrap: wrap;
     }
     
     .control-row button {
         flex: 1;
-        min-width: 70px;
-        padding: 8px 10px;
-        background: #1976d2;
+        padding: 8px;
+        background: #2196f3;
         color: white;
         border: none;
         border-radius: 4px;
-        font-size: 10px;
-        font-family: 'Courier New', monospace;
         cursor: pointer;
+        font-size: 11px;
+        font-weight: bold;
         transition: background 0.2s;
     }
     
     .control-row button:hover {
-        background: #1565c0;
-    }
-    
-    .control-row button:active {
-        background: #0d47a1;
+        background: #1976d2;
     }
     
     .measurements-panel {
-        margin-top: 15px;
+        margin-top: 10px;
         padding: 10px;
         background: rgba(255, 255, 255, 0.1);
         border-radius: 4px;
-        border: 1px solid #444;
     }
     
     .measurement-row {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 4px;
+        margin-bottom: 5px;
         font-size: 10px;
     }
     
     .measurement-row span:first-child {
-        color: #ccc;
+        color: #aaa;
     }
     
     .measurement-row span:last-child {
-        color: #4fc3f7;
+        color: #00bcd4;
         font-weight: bold;
     }
     
-    .theory-section span, .measured-section span {
-        color: #81c784 !important;
-        font-weight: bold !important;
-        font-size: 10px !important;
-    }
-    
     .theory-section, .measured-section {
-        margin-top: 8px !important;
-        border-top: 1px solid #444 !important;
-        padding-top: 4px !important;
+        margin-top: 8px;
+        padding-top: 5px;
+        border-top: 1px solid #444;
     }
     
     .visualization-area {
         flex: 1;
         position: relative;
         display: flex;
-        flex-direction: column;
-        min-width: 0;
-        height: 100%;
     }
     
     #quantumCanvas {
         width: 100%;
         height: 100%;
-        background: linear-gradient(180deg, #001122 0%, #002244 100%);
-        cursor: crosshair;
-    }
-    
-    .plot-labels {
-        position: absolute;
-        pointer-events: none;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
+        background: linear-gradient(180deg, #0a0e1a 0%, #1a2332 100%);
     }
     
     .legend-box {
         position: absolute;
         top: 10px;
         left: 10px;
-        background: rgba(0, 0, 0, 0.9);
-        color: white;
-        padding: 8px;
+        background: rgba(0, 0, 0, 0.85);
+        padding: 10px;
         border-radius: 6px;
         border: 1px solid #333;
         font-family: 'Courier New', monospace;
-        font-size: 9px;
-        min-width: 180px;
-        backdrop-filter: blur(5px);
+        font-size: 10px;
     }
     
     .legend-title {
+        color: #00bcd4;
+        margin-bottom: 8px;
         font-weight: bold;
-        color: #4fc3f7;
-        margin-bottom: 6px;
-        font-size: 10px;
         text-align: center;
-        border-bottom: 1px solid #333;
-        padding-bottom: 3px;
     }
     
     .legend-item {
         display: flex;
         align-items: center;
-        margin-bottom: 3px;
-        gap: 6px;
+        gap: 8px;
+        margin-bottom: 4px;
+        color: #ddd;
     }
     
     .color-box {
-        width: 10px;
-        height: 6px;
+        width: 12px;
+        height: 12px;
         border-radius: 2px;
-        flex-shrink: 0;
         border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-    
-    .wavefunction-color {
-        background: #4fc3f7;
-    }
-    
-    .left-wave-color {
-        background: #81c784;
-    }
-    
-    .right-wave-color {
-        background: linear-gradient(to right, #ff9800, #f44336);
-    }
-    
-    .potential-color {
-        background: #ff6b6b;
-    }
-    
-    .energy-color {
-        background: #ffeb3b;
-    }
-    
-    .legend-item span:last-child {
-        color: #e0e0e0;
-        font-size: 8px;
-        line-height: 1.2;
     }
     
     .toggle-ui-btn {
         position: absolute;
         top: 10px;
         right: 10px;
-        background: rgba(0, 0, 0, 0.9);
+        background: rgba(0, 0, 0, 0.85);
         color: white;
-        border: 1px solid #555;
+        border: 1px solid #444;
         padding: 8px 12px;
         border-radius: 4px;
         cursor: pointer;
         font-size: 11px;
-        font-family: 'Courier New', monospace;
         z-index: 1000;
-        transition: background 0.2s;
     }
     
     .toggle-ui-btn:hover {
-        background: rgba(50, 50, 50, 0.9);
+        background: rgba(30, 30, 30, 0.9);
     }
     
-    /* Mobile responsive */
     @media (max-width: 768px) {
-        #simulation-container {
-            margin: 10px;
-            margin-bottom: 70px;
-        }
-        
         .quantum-container {
-            height: calc(100vh - 140px);
-            max-height: none;
             flex-direction: column;
+            height: calc(100vh - 140px);
         }
         
         .controls-panel {
             width: 100%;
-            min-width: auto;
-            height: 280px;
-            border-right: none;
+            height: 300px;
             border-bottom: 2px solid #333;
         }
         
         .controls-panel.hidden {
             transform: translateY(-100%);
             margin-left: 0;
-            margin-top: -280px;
-        }
-        
-        .visualization-area {
-            flex: 1;
-            min-height: 250px;
-        }
-        
-        .legend-box {
-            top: 5px;
-            left: 5px;
-            padding: 4px;
-            min-width: 150px;
-            font-size: 7px;
-        }
-        
-        .legend-title {
-            font-size: 8px;
-            margin-bottom: 4px;
-        }
-        
-        .legend-item span:last-child {
-            font-size: 6px;
-        }
-        
-        .color-box {
-            width: 8px;
-            height: 5px;
-        }
-        
-        .toggle-ui-btn {
-            top: 5px;
-            right: 5px;
-            padding: 6px 8px;
-            font-size: 9px;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        #simulation-container {
-            margin: 5px;
-            margin-bottom: 65px;
-        }
-        
-        .quantum-container {
-            height: calc(100vh - 120px);
-        }
-        
-        .controls-panel {
-            height: 260px;
-        }
-        
-        .legend-box {
-            font-size: 6px;
-            min-width: 120px;
-            padding: 3px;
-        }
-        
-        .legend-title {
-            font-size: 7px;
-        }
-        
-        .legend-item span:last-child {
-            font-size: 5px;
+            margin-top: -300px;
         }
     }
 `;
 document.head.appendChild(style);
 
-class QuantumSandbox {
+class AccurateQuantumSimulation {
     constructor() {
-        console.log("Initializing Quantum Sandbox...");
-        
         this.canvas = document.getElementById('quantumCanvas');
         this.ctx = this.canvas.getContext('2d');
         
-        if (!this.canvas || !this.ctx) {
-            console.error("Canvas not found!");
-            return;
-        }
+        // Simulation parameters (natural units: ℏ = 2m = 1)
+        this.L = 60.0;              // System size (increased for better boundaries)
+        this.N = 512;               // Default grid points
+        this.dx = this.L / this.N;  // Spatial step
+        this.dt = 0.001;            // Time step (small for stability)
+        this.speedMultiplier = 1.0; // Animation speed
         
-        // Physical parameters (dimensionless units: ℏ = m = 1)
-        this.L = 40;           // Domain length
-        this.N = 256;          // Grid points
-        this.dx = this.L / this.N;
-        this.dt = 0.05;        // Time step
+        // Arrays
+        this.x = null;
+        this.V = null;
+        this.psi = null;        // Complex array: [real0, imag0, real1, imag1, ...]
+        this.prob = null;        // Probability density
+        this.expV = null;        // Exp(-iV*dt/2) for potential evolution
+        this.expT = null;        // Exp(-iT*dt) for kinetic evolution in k-space
         
-        // Grid arrays
-        this.x = new Float32Array(this.N);
-        this.V = new Float32Array(this.N);
-        this.absorber = new Float32Array(this.N);
-        
-        // Wave function (complex)
-        this.psi_real = new Float32Array(this.N);
-        this.psi_imag = new Float32Array(this.N);
-        
-        // Simulation state
-        this.isRunning = false;
-        this.currentStep = 0;
-        this.time = 0;
-        this.animationId = null;
-        
-        // Wave packet parameters
-        this.energy = 1.0;
-        this.sigma = 2.0;
-        this.x0 = -10.0;
+        // Wave packet parameters  
+        this.energy = 1.5;       // Default energy (relative to V₀)
+        this.sigma = 2.0;        // Packet width
+        this.x0 = -12.0;         // Initial position (moved closer to center)
         
         // Potential parameters
         this.potentialType = 'step';
-        this.potentialHeight = 0.5;
-        this.potentialWidth = 3.0;
+        this.V0 = 1.0;           // Potential height
+        this.a = 4.0;            // Potential width
         
-        // Measurements - Initialize all properties with correct defaults
+        // State
+        this.isRunning = false;
+        this.time = 0;
+        this.frame = 0;
+        
+        // Measurements
+        this.norm = 1.0;
         this.reflection = 0;
         this.transmission = 0;
-        this.packetCenter = -10;
-        this.conservationValue = 1;
-        
-        // Initialize theoretical values properly
         this.theoreticalR = 0;
         this.theoreticalT = 0;
-        this.k = Math.sqrt(2 * this.energy);
-        this.kPrime = Math.sqrt(2 * Math.max(0.1, this.energy - this.potentialHeight));
-        this.energyRegime = this.energy > this.potentialHeight ? "E > V₀" : "E < V₀";
         
-        console.log(`Constructor: E=${this.energy}, V₀=${this.potentialHeight}, Initial regime=${this.energyRegime}`);
-        
-        console.log("Starting initialization...");
         this.init();
     }
     
     init() {
-        try {
-            this.setupGrid();
-            this.setupPotential(); // This calls calculateTheoreticalRT()
-            this.setupInitialWavepacket();
-            this.calculateMeasurements();
-            this.updateDisplays();
-            this.setupEventListeners();
-            this.resizeCanvas();
-            this.render();
-            
-            // Force initial theoretical calculation
-            this.calculateTheoreticalRT();
-            this.updateDisplays();
-            
-            console.log("Quantum Sandbox initialized successfully!");
-            console.log(`Initial theory: R=${this.theoreticalR.toFixed(3)}, T=${this.theoreticalT.toFixed(3)}`);
-        } catch (error) {
-            console.error("Error during initialization:", error);
+        this.setupArrays();
+        this.setupGrid();
+        this.setupPotential();
+        this.setupInitialWavepacket();
+        this.setupEvolutionOperators();
+        this.calculateTheory();
+        this.setupEventListeners();
+        this.resizeCanvas();
+        this.render();
+    }
+    
+    setupArrays() {
+        this.x = new Float64Array(this.N);
+        this.V = new Float64Array(this.N);
+        this.psi = new Float64Array(this.N * 2);  // Complex array
+        this.prob = new Float64Array(this.N);
+        this.expV = new Float64Array(this.N * 2); // Complex
+        this.expT = new Float64Array(this.N * 2); // Complex
+    }
+    
+    setupGrid() {
+        // Center the grid around the origin where the potential is
+        for (let i = 0; i < this.N; i++) {
+            this.x[i] = -this.L/2 + i * this.dx;
         }
+    }
+    
+    setupPotential() {
+        const type = this.potentialType;
+        const V0 = this.V0;
+        const a = this.a;
+        
+        for (let i = 0; i < this.N; i++) {
+            const x = this.x[i];
+            
+            switch(type) {
+                case 'step':
+                    // Step at x=0
+                    this.V[i] = x > 0 ? V0 : 0;
+                    break;
+                    
+                case 'barrier':
+                    // Barrier centered at x=0
+                    this.V[i] = Math.abs(x) < a/2 ? V0 : 0;
+                    break;
+                    
+                case 'well':
+                    // Well centered at x=0
+                    this.V[i] = Math.abs(x) < a/2 ? -Math.abs(V0) : 0;
+                    break;
+                    
+                case 'harmonic':
+                    // Harmonic oscillator centered at x=0
+                    const k = 8 * Math.abs(V0) / (a * a);
+                    this.V[i] = 0.5 * k * x * x;
+                    break;
+                    
+                default:
+                    this.V[i] = 0;
+            }
+        }
+    }
+    
+    setupInitialWavepacket() {
+        const k0 = Math.sign(this.energy) * Math.sqrt(2 * Math.abs(this.energy));
+        const sigma2 = this.sigma * this.sigma;
+        
+        // Create Gaussian wave packet
+        let norm = 0;
+        for (let i = 0; i < this.N; i++) {
+            const x = this.x[i] - this.x0;
+            const gauss = Math.exp(-x * x / (4 * sigma2)) / Math.pow(2 * Math.PI * sigma2, 0.25);
+            
+            const idx = 2 * i;
+            this.psi[idx] = gauss * Math.cos(k0 * this.x[i]);     // Real part
+            this.psi[idx + 1] = gauss * Math.sin(k0 * this.x[i]); // Imaginary part
+            
+            norm += this.psi[idx] * this.psi[idx] + this.psi[idx + 1] * this.psi[idx + 1];
+        }
+        
+        // Normalize
+        norm = Math.sqrt(norm * this.dx);
+        for (let i = 0; i < this.N * 2; i++) {
+            this.psi[i] /= norm;
+        }
+        
+        this.time = 0;
+        this.frame = 0;
+    }
+    
+    setupEvolutionOperators() {
+        // Setup exp(-iV*dt/2) for potential evolution
+        const dt = this.dt;
+        for (let i = 0; i < this.N; i++) {
+            const phase = -this.V[i] * dt / 2;
+            const idx = 2 * i;
+            this.expV[idx] = Math.cos(phase);
+            this.expV[idx + 1] = -Math.sin(phase);
+        }
+        
+        // Setup exp(-iT*dt) for kinetic evolution in k-space
+        const dk = 2 * Math.PI / this.L;
+        for (let i = 0; i < this.N; i++) {
+            // k values with proper ordering for FFT
+            let k;
+            if (i <= this.N / 2) {
+                k = i * dk;
+            } else {
+                k = (i - this.N) * dk;
+            }
+            
+            const phase = -0.5 * k * k * dt;
+            const idx = 2 * i;
+            this.expT[idx] = Math.cos(phase);
+            this.expT[idx + 1] = -Math.sin(phase);
+        }
+    }
+    
+    // Cooley-Tukey FFT implementation
+    fft(data, inverse = false) {
+        const n = data.length / 2;
+        const angle = (inverse ? 2 : -2) * Math.PI;
+        
+        // Bit reversal
+        let j = 0;
+        for (let i = 1; i < n - 1; i++) {
+            let bit = n >> 1;
+            while (j & bit) {
+                j ^= bit;
+                bit >>= 1;
+            }
+            j ^= bit;
+            
+            if (i < j) {
+                // Swap complex numbers at positions i and j
+                let tempR = data[2 * i];
+                let tempI = data[2 * i + 1];
+                data[2 * i] = data[2 * j];
+                data[2 * i + 1] = data[2 * j + 1];
+                data[2 * j] = tempR;
+                data[2 * j + 1] = tempI;
+            }
+        }
+        
+        // Cooley-Tukey FFT
+        for (let len = 2; len <= n; len <<= 1) {
+            const ang = angle / len;
+            const wlenR = Math.cos(ang);
+            const wlenI = Math.sin(ang);
+            
+            for (let i = 0; i < n; i += len) {
+                let wR = 1;
+                let wI = 0;
+                
+                for (let j = 0; j < len / 2; j++) {
+                    const idx1 = 2 * (i + j);
+                    const idx2 = 2 * (i + j + len / 2);
+                    
+                    const uR = data[idx1];
+                    const uI = data[idx1 + 1];
+                    const vR = data[idx2] * wR - data[idx2 + 1] * wI;
+                    const vI = data[idx2] * wI + data[idx2 + 1] * wR;
+                    
+                    data[idx1] = uR + vR;
+                    data[idx1 + 1] = uI + vI;
+                    data[idx2] = uR - vR;
+                    data[idx2 + 1] = uI - vI;
+                    
+                    const tempR = wR * wlenR - wI * wlenI;
+                    wI = wR * wlenI + wI * wlenR;
+                    wR = tempR;
+                }
+            }
+        }
+        
+        // Normalize for inverse transform
+        if (inverse) {
+            for (let i = 0; i < data.length; i++) {
+                data[i] /= n;
+            }
+        }
+    }
+    
+    evolve() {
+        // Split-operator method: V/2 -> T -> V/2
+        
+        // Step 1: Half potential evolution
+        for (let i = 0; i < this.N; i++) {
+            const idx = 2 * i;
+            const psiR = this.psi[idx];
+            const psiI = this.psi[idx + 1];
+            const expR = this.expV[idx];
+            const expI = this.expV[idx + 1];
+            
+            this.psi[idx] = psiR * expR - psiI * expI;
+            this.psi[idx + 1] = psiR * expI + psiI * expR;
+        }
+        
+        // Step 2: FFT to k-space
+        const psiCopy = new Float64Array(this.psi);
+        this.fft(psiCopy, false);
+        
+        // Step 3: Kinetic evolution in k-space
+        for (let i = 0; i < this.N; i++) {
+            const idx = 2 * i;
+            const psiR = psiCopy[idx];
+            const psiI = psiCopy[idx + 1];
+            const expR = this.expT[idx];
+            const expI = this.expT[idx + 1];
+            
+            psiCopy[idx] = psiR * expR - psiI * expI;
+            psiCopy[idx + 1] = psiR * expI + psiI * expR;
+        }
+        
+        // Step 4: Inverse FFT back to position space
+        this.fft(psiCopy, true);
+        
+        // Step 5: Half potential evolution again
+        for (let i = 0; i < this.N; i++) {
+            const idx = 2 * i;
+            const psiR = psiCopy[idx];
+            const psiI = psiCopy[idx + 1];
+            const expR = this.expV[idx];
+            const expI = this.expV[idx + 1];
+            
+            this.psi[idx] = psiR * expR - psiI * expI;
+            this.psi[idx + 1] = psiR * expI + psiI * expR;
+        }
+        
+        // Apply gentle absorbing boundaries at edges
+        const absorberWidth = 8;
+        const dampingStrength = 0.98; // Gentler damping
+        for (let i = 0; i < absorberWidth; i++) {
+            const factor = Math.cos((Math.PI / 2) * (1 - i / absorberWidth));
+            const damping = 1 - (1 - dampingStrength) * (1 - factor * factor);
+            
+            // Left edge
+            this.psi[2 * i] *= damping;
+            this.psi[2 * i + 1] *= damping;
+            
+            // Right edge
+            const j = this.N - 1 - i;
+            this.psi[2 * j] *= damping;
+            this.psi[2 * j + 1] *= damping;
+        }
+        
+        this.time += this.dt;
+        this.frame++;
+    }
+    
+    calculateMeasurements() {
+        // Calculate probability density and norm
+        let norm = 0;
+        let leftProb = 0;
+        let rightProb = 0;
+        
+        for (let i = 0; i < this.N; i++) {
+            const idx = 2 * i;
+            const prob = this.psi[idx] * this.psi[idx] + this.psi[idx + 1] * this.psi[idx + 1];
+            this.prob[i] = prob;
+            norm += prob;
+            
+            // Measure reflection and transmission
+            if (this.x[i] < -5) {
+                leftProb += prob;
+            } else if (this.x[i] > 5) {
+                rightProb += prob;
+            }
+        }
+        
+        this.norm = norm * this.dx;
+        this.reflection = leftProb * this.dx;
+        this.transmission = rightProb * this.dx;
+    }
+    
+    calculateTheory() {
+        const E = this.energy;
+        const V0 = this.V0;
+        
+        if (this.potentialType === 'step') {
+            if (E > V0) {
+                const k1 = Math.sqrt(2 * E);
+                const k2 = Math.sqrt(2 * (E - V0));
+                this.theoreticalR = Math.pow((k1 - k2) / (k1 + k2), 2);
+                this.theoreticalT = 1 - this.theoreticalR;
+            } else {
+                this.theoreticalR = 1;
+                this.theoreticalT = 0;
+            }
+        } else if (this.potentialType === 'barrier') {
+            const a = this.a;
+            if (E > V0) {
+                const k = Math.sqrt(2 * E);
+                const q = Math.sqrt(2 * (E - V0));
+                const T = 1 / (1 + Math.pow((k * k - q * q) / (2 * k * q), 2) * Math.pow(Math.sin(q * a), 2));
+                this.theoreticalT = T;
+                this.theoreticalR = 1 - T;
+            } else if (E > 0) {
+                const k = Math.sqrt(2 * E);
+                const kappa = Math.sqrt(2 * (V0 - E));
+                const T = 1 / (1 + Math.pow((k * k + kappa * kappa) / (2 * k * kappa), 2) * Math.pow(Math.sinh(kappa * a), 2));
+                this.theoreticalT = T;
+                this.theoreticalR = 1 - T;
+            } else {
+                this.theoreticalR = 1;
+                this.theoreticalT = 0;
+            }
+        } else {
+            this.theoreticalR = 0;
+            this.theoreticalT = 0;
+        }
+    }
+    
+    setupEventListeners() {
+        // Controls
+        document.getElementById('energySlider').addEventListener('input', (e) => {
+            this.energy = parseFloat(e.target.value);
+            document.getElementById('energyValue').textContent = this.energy.toFixed(2);
+            if (!this.isRunning) this.reset();
+        });
+        
+        document.getElementById('widthSlider').addEventListener('input', (e) => {
+            this.sigma = parseFloat(e.target.value);
+            document.getElementById('widthValue').textContent = this.sigma.toFixed(1);
+            if (!this.isRunning) this.reset();
+        });
+        
+        document.getElementById('startPosSlider').addEventListener('input', (e) => {
+            this.x0 = parseFloat(e.target.value);
+            document.getElementById('startPosValue').textContent = this.x0.toFixed(1);
+            if (!this.isRunning) this.reset();
+        });
+        
+        document.getElementById('potentialType').addEventListener('change', (e) => {
+            this.potentialType = e.target.value;
+            if (!this.isRunning) this.reset();
+        });
+        
+        document.getElementById('potentialHeight').addEventListener('input', (e) => {
+            this.V0 = parseFloat(e.target.value);
+            document.getElementById('potentialHeightValue').textContent = this.V0.toFixed(2);
+            if (!this.isRunning) this.reset();
+        });
+        
+        document.getElementById('potentialWidth').addEventListener('input', (e) => {
+            this.a = parseFloat(e.target.value);
+            document.getElementById('potentialWidthValue').textContent = this.a.toFixed(1);
+            if (!this.isRunning) this.reset();
+        });
+        
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            this.speedMultiplier = parseFloat(e.target.value);
+            document.getElementById('speedValue').textContent = this.speedMultiplier.toFixed(1) + 'x';
+        });
+        
+        document.getElementById('gridPoints').addEventListener('change', (e) => {
+            this.N = parseInt(e.target.value);
+            this.dx = this.L / this.N;
+            this.setupArrays();
+            this.reset();
+        });
+        
+        document.getElementById('playPauseBtn').addEventListener('click', () => {
+            this.toggleSimulation();
+        });
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            this.reset();
+        });
+        
+        document.getElementById('toggleUI').addEventListener('click', () => {
+            const panel = document.getElementById('controlsPanel');
+            const btn = document.getElementById('toggleUI');
+            panel.classList.toggle('hidden');
+            btn.textContent = panel.classList.contains('hidden') ? 'Show Controls' : 'Hide Controls';
+            setTimeout(() => {
+                this.resizeCanvas();
+                this.render();
+            }, 300);
+        });
         
         window.addEventListener('resize', () => {
             this.resizeCanvas();
@@ -595,643 +802,74 @@ class QuantumSandbox {
         });
     }
     
-    setupGrid() {
-        // Position grid: centered at origin
-        for (let i = 0; i < this.N; i++) {
-            this.x[i] = -this.L/2 + i * this.dx;
-        }
-        
-        // Setup absorbing boundaries
-        this.setupAbsorber();
-    }
-    
-    setupAbsorber() {
-        const absorberWidth = this.L * 0.1;
-        const gamma = 0.05;
-        
-        for (let i = 0; i < this.N; i++) {
-            const x = this.x[i];
-            const edgeDistance = Math.min(Math.abs(x + this.L/2), Math.abs(x - this.L/2));
-            
-            if (edgeDistance < absorberWidth) {
-                const ratio = 1 - edgeDistance / absorberWidth;
-                this.absorber[i] = gamma * ratio * ratio;
-            } else {
-                this.absorber[i] = 0;
-            }
-        }
-    }
-    
-    setupPotential() {
-        this.V.fill(0);
-        
-        switch (this.potentialType) {
-            case 'step':
-                for (let i = 0; i < this.N; i++) {
-                    if (this.x[i] > 0) {
-                        this.V[i] = this.potentialHeight;
-                    }
-                }
-                break;
-                
-            case 'well':
-                for (let i = 0; i < this.N; i++) {
-                    const x = this.x[i];
-                    if (Math.abs(x) < this.potentialWidth/2) {
-                        this.V[i] = -this.potentialHeight;
-                    }
-                }
-                break;
-                
-            case 'barrier':
-                for (let i = 0; i < this.N; i++) {
-                    const x = this.x[i];
-                    if (Math.abs(x) < this.potentialWidth/2) {
-                        this.V[i] = this.potentialHeight;
-                    }
-                }
-                break;
-        }
-        
-        this.calculateTheoreticalRT();
-    }
-    
-    setupInitialWavepacket() {
-        const k0 = Math.sqrt(2 * this.energy);
-        
-        let norm = 0;
-        for (let i = 0; i < this.N; i++) {
-            const x = this.x[i];
-            const gauss = Math.exp(-Math.pow(x - this.x0, 2) / (2 * this.sigma * this.sigma));
-            this.psi_real[i] = gauss * Math.cos(k0 * x);
-            this.psi_imag[i] = gauss * Math.sin(k0 * x);
-            norm += this.psi_real[i] * this.psi_real[i] + this.psi_imag[i] * this.psi_imag[i];
-            
-            // Check for NaN during creation
-            if (isNaN(this.psi_real[i]) || isNaN(this.psi_imag[i])) {
-                console.warn(`NaN detected at grid point ${i}, resetting to zero`);
-                this.psi_real[i] = 0;
-                this.psi_imag[i] = 0;
-            }
-        }
-        
-        norm = Math.sqrt(norm * this.dx);
-        
-        // Prevent division by zero in normalization
-        if (norm < 1e-10 || !isFinite(norm) || isNaN(norm)) {
-            console.warn("Invalid normalization constant, reinitializing with default packet...");
-            // Create a simple default packet
-            const center = Math.floor(this.N / 4); // Left side of domain
-            for (let i = 0; i < this.N; i++) {
-                this.psi_real[i] = 0;
-                this.psi_imag[i] = 0;
-            }
-            // Small Gaussian at default position
-            for (let i = center - 20; i < center + 20 && i < this.N; i++) {
-                if (i >= 0) {
-                    const x = this.x[i];
-                    const gauss = Math.exp(-0.1 * x * x);
-                    this.psi_real[i] = gauss * Math.cos(k0 * x);
-                    this.psi_imag[i] = gauss * Math.sin(k0 * x);
-                }
-            }
-            // Recalculate norm
-            norm = 0;
-            for (let i = 0; i < this.N; i++) {
-                norm += this.psi_real[i] * this.psi_real[i] + this.psi_imag[i] * this.psi_imag[i];
-            }
-            norm = Math.sqrt(norm * this.dx);
-        }
-        
-        // Normalize with safety check
-        if (norm > 1e-10) {
-            for (let i = 0; i < this.N; i++) {
-                this.psi_real[i] /= norm;
-                this.psi_imag[i] /= norm;
-                
-                // Final NaN check after normalization
-                if (isNaN(this.psi_real[i]) || isNaN(this.psi_imag[i])) {
-                    this.psi_real[i] = 0;
-                    this.psi_imag[i] = 0;
-                }
-            }
-        }
-        
-        this.currentStep = 0;
-        this.time = 0;
-        
-        console.log(`Wavepacket initialized: norm=${norm.toFixed(6)}`);
-    }
-    
-    calculateTheoreticalRT() {
-        console.log(`Calculating theory: E=${this.energy}, V₀=${this.potentialHeight}, type=${this.potentialType}`);
-        
-        if (this.potentialType !== 'step') {
-            this.theoreticalR = 0;
-            this.theoreticalT = 0;
-            this.k = Math.sqrt(2 * this.energy);
-            this.kPrime = this.k;
-            this.energyRegime = "Not step";
-            return;
-        }
-        
-        const E = this.energy;
-        const V0 = this.potentialHeight;
-        
-        // Ensure positive energy
-        this.k = Math.sqrt(Math.max(0.001, 2 * E));
-        
-        if (E > V0) {
-            // Ensure we don't get negative values under square root
-            this.kPrime = Math.sqrt(Math.max(0.001, 2 * (E - V0)));
-            this.energyRegime = "E > V₀";
-            
-            // Prevent division by zero
-            const denominator = (this.k + this.kPrime) * (this.k + this.kPrime);
-            if (denominator < 1e-10) {
-                this.theoreticalR = 0.5;
-                this.theoreticalT = 0.5;
-            } else {
-                const numerator = (this.k - this.kPrime) * (this.k - this.kPrime);
-                this.theoreticalR = numerator / denominator;
-                this.theoreticalT = (4 * this.k * this.kPrime) / denominator;
-            }
-            
-            // NaN checks and corrections
-            if (!isFinite(this.theoreticalR) || isNaN(this.theoreticalR)) {
-                console.warn("NaN detected in R calculation, setting to 0.5");
-                this.theoreticalR = 0.5;
-            }
-            if (!isFinite(this.theoreticalT) || isNaN(this.theoreticalT)) {
-                console.warn("NaN detected in T calculation, setting to 0.5");
-                this.theoreticalT = 0.5;
-            }
-            
-            // Ensure conservation
-            const sum = this.theoreticalR + this.theoreticalT;
-            if (Math.abs(sum - 1.0) > 0.1) {
-                console.warn(`Conservation violation: R+T=${sum}, normalizing...`);
-                this.theoreticalR /= sum;
-                this.theoreticalT /= sum;
-            }
-            
-            console.log(`E > V₀: k=${this.k.toFixed(3)}, k'=${this.kPrime.toFixed(3)}`);
-            console.log(`Theory: R=${this.theoreticalR.toFixed(3)}, T=${this.theoreticalT.toFixed(3)}, sum=${(this.theoreticalR + this.theoreticalT).toFixed(3)}`);
-        } else {
-            this.kPrime = Math.sqrt(Math.max(0.001, 2 * (V0 - E)));
-            this.energyRegime = "E < V₀";
-            this.theoreticalR = 1.0;
-            this.theoreticalT = 0.0;
-            
-            console.log(`E < V₀: k=${this.k.toFixed(3)}, κ=${this.kPrime.toFixed(3)} (evanescent)`);
-            console.log(`Theory: R=${this.theoreticalR}, T=${this.theoreticalT} (total reflection)`);
-        }
-    }
-    
-    setupEventListeners() {
-        console.log("Setting up event listeners...");
-        
-        // Control updates
-        const energySlider = document.getElementById('energySlider');
-        const widthSlider = document.getElementById('widthSlider');
-        const startPosSlider = document.getElementById('startPosSlider');
-        const potentialType = document.getElementById('potentialType');
-        const potentialHeight = document.getElementById('potentialHeight');
-        const potentialWidth = document.getElementById('potentialWidth');
-        const timeStepSlider = document.getElementById('timeStepSlider');
-        const playPauseBtn = document.getElementById('playPauseBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const toggleUI = document.getElementById('toggleUI');
-        
-        if (!energySlider || !playPauseBtn) {
-            console.error("Critical UI elements not found!");
-            return;
-        }
-        
-        energySlider.addEventListener('input', (e) => {
-            this.energy = parseFloat(e.target.value);
-            this.calculateTheoreticalRT();
-            this.updateDisplays();
-            if (!this.isRunning) this.reset();
-        });
-        
-        widthSlider.addEventListener('input', (e) => {
-            this.sigma = parseFloat(e.target.value);
-            this.calculateTheoreticalRT();
-            this.updateDisplays();
-            if (!this.isRunning) this.reset();
-        });
-        
-        startPosSlider.addEventListener('input', (e) => {
-            this.x0 = parseFloat(e.target.value);
-            this.calculateTheoreticalRT();
-            this.updateDisplays();
-            if (!this.isRunning) this.reset();
-        });
-        
-        potentialType.addEventListener('change', (e) => {
-            this.potentialType = e.target.value;
-            this.setupPotential();
-            this.calculateTheoreticalRT();
-            this.updateDisplays();
-            if (!this.isRunning) this.reset();
-        });
-        
-        potentialHeight.addEventListener('input', (e) => {
-            this.potentialHeight = parseFloat(e.target.value);
-            this.setupPotential();
-            this.calculateTheoreticalRT();
-            this.updateDisplays();
-            if (!this.isRunning) this.reset();
-        });
-        
-        potentialWidth.addEventListener('input', (e) => {
-            this.potentialWidth = parseFloat(e.target.value);
-            this.setupPotential();
-            this.calculateTheoreticalRT();
-            this.updateDisplays();
-            if (!this.isRunning) this.reset();
-        });
-        
-        timeStepSlider.addEventListener('input', (e) => {
-            this.dt = parseFloat(e.target.value);
-            this.calculateTheoreticalRT();
-            this.updateDisplays();
-        });
-        
-        playPauseBtn.addEventListener('click', () => {
-            this.toggleSimulation();
-        });
-        
-        resetBtn.addEventListener('click', () => {
-            this.reset();
-        });
-        
-        toggleUI.addEventListener('click', () => {
-            this.toggleUI();
-        });
-        
-        console.log("Event listeners set up successfully!");
-    }
-    
-    toggleUI() {
-        const panel = document.getElementById('controlsPanel');
-        const btn = document.getElementById('toggleUI');
-        
-        panel.classList.toggle('hidden');
-        btn.textContent = panel.classList.contains('hidden') ? 'Show Controls' : 'Hide Controls';
-        
-        // Trigger a resize to adjust canvas
-        setTimeout(() => {
-            this.resizeCanvas();
-            this.render();
-        }, 300);
-    }
-    
     toggleSimulation() {
         this.isRunning = !this.isRunning;
         const btn = document.getElementById('playPauseBtn');
+        btn.textContent = this.isRunning ? '⏸ Pause' : '▶ Start';
         
         if (this.isRunning) {
-            btn.textContent = '⏸ Pause';
-            this.startEvolution();
-        } else {
-            btn.textContent = '▶ Start';
-            if (this.animationId) {
-                cancelAnimationFrame(this.animationId);
-                this.animationId = null;
-            }
+            this.animate();
         }
     }
     
     reset() {
         this.isRunning = false;
         document.getElementById('playPauseBtn').textContent = '▶ Start';
-        
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-            this.animationId = null;
-        }
-        
+        this.setupGrid();
         this.setupPotential();
         this.setupInitialWavepacket();
-        this.calculateTheoreticalRT(); // Ensure theory is recalculated
+        this.setupEvolutionOperators();
+        this.calculateTheory();
         this.calculateMeasurements();
         this.updateDisplays();
         this.render();
     }
     
-    startEvolution() {
-        const evolve = () => {
-            if (!this.isRunning) return;
-            
-            // Perform time steps
-            for (let step = 0; step < 2; step++) {
-                this.timeStep();
-                this.currentStep++;
-                this.time += this.dt;
-                
-                // Periodic normalization check to prevent drift
-                if (this.currentStep % 50 === 0) {
-                    this.checkAndCorrectNormalization();
-                }
-            }
-            
-            this.calculateMeasurements();
-            this.updateDisplays();
-            this.render();
-            
-            this.animationId = requestAnimationFrame(evolve);
-        };
+    animate() {
+        if (!this.isRunning) return;
         
-        evolve();
-    }
-    
-    checkAndCorrectNormalization() {
-        let norm = 0;
-        for (let i = 0; i < this.N; i++) {
-            const prob = this.psi_real[i] * this.psi_real[i] + this.psi_imag[i] * this.psi_imag[i];
-            if (isFinite(prob)) {
-                norm += prob;
-            }
-        }
-        norm = Math.sqrt(norm * this.dx);
-        
-        // Check if normalization has drifted significantly
-        if (norm < 0.1 || norm > 2.0 || !isFinite(norm)) {
-            console.warn(`Normalization drift detected: ${norm}, correcting...`);
-            
-            if (norm > 1e-10 && isFinite(norm)) {
-                // Renormalize
-                for (let i = 0; i < this.N; i++) {
-                    this.psi_real[i] /= norm;
-                    this.psi_imag[i] /= norm;
-                }
-            } else {
-                // Reset to a simple wave packet if normalization completely failed
-                console.warn("Complete normalization failure, resetting wavefunction...");
-                this.setupInitialWavepacket();
-            }
-        }
-    }
-    
-    timeStep() {
-        // Simple time evolution using potential and kinetic operators
-        this.applyPotentialEvolution(this.dt / 2);
-        this.applyKineticEvolution(this.dt);
-        this.applyPotentialEvolution(this.dt / 2);
-        this.applyAbsorber();
-    }
-    
-    applyPotentialEvolution(dt) {
-        for (let i = 0; i < this.N; i++) {
-            const phase = -this.V[i] * dt;
-            
-            // Check for valid phase
-            if (!isFinite(phase) || isNaN(phase)) {
-                console.warn(`Invalid phase at ${i}: ${phase}, skipping evolution`);
-                continue;
-            }
-            
-            const cos_phase = Math.cos(phase);
-            const sin_phase = Math.sin(phase);
-            
-            const real = this.psi_real[i];
-            const imag = this.psi_imag[i];
-            
-            this.psi_real[i] = real * cos_phase - imag * sin_phase;
-            this.psi_imag[i] = real * sin_phase + imag * cos_phase;
-            
-            // NaN check after evolution
-            if (isNaN(this.psi_real[i]) || isNaN(this.psi_imag[i])) {
-                console.warn(`NaN detected after potential evolution at ${i}, setting to zero`);
-                this.psi_real[i] = 0;
-                this.psi_imag[i] = 0;
-            }
-        }
-    }
-    
-    applyKineticEvolution(dt) {
-        // Simplified kinetic evolution using second derivatives
-        const temp_real = new Float32Array(this.N);
-        const temp_imag = new Float32Array(this.N);
-        
-        // Copy boundary conditions
-        temp_real[0] = this.psi_real[0];
-        temp_imag[0] = this.psi_imag[0];
-        temp_real[this.N-1] = this.psi_real[this.N-1];
-        temp_imag[this.N-1] = this.psi_imag[this.N-1];
-        
-        for (let i = 1; i < this.N - 1; i++) {
-            // Second derivative approximation with safety checks
-            const dx2 = this.dx * this.dx;
-            
-            if (dx2 < 1e-10) {
-                temp_real[i] = this.psi_real[i];
-                temp_imag[i] = this.psi_imag[i];
-                continue;
-            }
-            
-            const d2_real = (this.psi_real[i+1] - 2*this.psi_real[i] + this.psi_real[i-1]) / dx2;
-            const d2_imag = (this.psi_imag[i+1] - 2*this.psi_imag[i] + this.psi_imag[i-1]) / dx2;
-            
-            // Check for NaN in derivatives
-            if (isNaN(d2_real) || isNaN(d2_imag) || !isFinite(d2_real) || !isFinite(d2_imag)) {
-                temp_real[i] = this.psi_real[i];
-                temp_imag[i] = this.psi_imag[i];
-                continue;
-            }
-            
-            // Apply kinetic evolution: -i * (-1/2) * d²/dx² * dt = i/2 * d²/dx² * dt
-            temp_real[i] = this.psi_real[i] - 0.5 * dt * d2_imag;
-            temp_imag[i] = this.psi_imag[i] + 0.5 * dt * d2_real;
-            
-            // NaN check after kinetic evolution
-            if (isNaN(temp_real[i]) || isNaN(temp_imag[i])) {
-                console.warn(`NaN detected after kinetic evolution at ${i}, keeping original value`);
-                temp_real[i] = this.psi_real[i];
-                temp_imag[i] = this.psi_imag[i];
-            }
+        // Evolve multiple steps per frame for speed control
+        const steps = Math.ceil(5 * this.speedMultiplier);
+        for (let i = 0; i < steps; i++) {
+            this.evolve();
         }
         
-        // Copy back with final NaN check
-        for (let i = 0; i < this.N; i++) {
-            if (isFinite(temp_real[i]) && isFinite(temp_imag[i])) {
-                this.psi_real[i] = temp_real[i];
-                this.psi_imag[i] = temp_imag[i];
-            }
-        }
-    }
-    
-    applyAbsorber() {
-        for (let i = 0; i < this.N; i++) {
-            if (this.absorber[i] > 0) {
-                const factor = Math.exp(-this.absorber[i] * this.dt);
-                
-                // Check for valid absorption factor
-                if (isFinite(factor) && factor > 0 && factor <= 1) {
-                    this.psi_real[i] *= factor;
-                    this.psi_imag[i] *= factor;
-                } else {
-                    // If absorption factor is invalid, gradually damp instead
-                    this.psi_real[i] *= 0.99;
-                    this.psi_imag[i] *= 0.99;
-                }
-                
-                // Final NaN check
-                if (isNaN(this.psi_real[i]) || isNaN(this.psi_imag[i])) {
-                    this.psi_real[i] = 0;
-                    this.psi_imag[i] = 0;
-                }
-            }
-        }
-    }
-    
-    calculateMeasurements() {
-        let norm = 0;
-        let leftProb = 0;
-        let rightProb = 0;
-        let packetCenter = 0;
-        let totalProb = 0;
+        this.calculateMeasurements();
+        this.updateDisplays();
+        this.render();
         
-        // Calculate probabilities with NaN checking
-        for (let i = 0; i < this.N; i++) {
-            // Check for NaN in wavefunction components
-            if (isNaN(this.psi_real[i]) || isNaN(this.psi_imag[i])) {
-                console.warn(`NaN detected in wavefunction at ${i}, setting to zero`);
-                this.psi_real[i] = 0;
-                this.psi_imag[i] = 0;
-            }
-            
-            const prob = this.psi_real[i] * this.psi_real[i] + this.psi_imag[i] * this.psi_imag[i];
-            
-            // Check for NaN in probability calculation
-            if (isNaN(prob) || !isFinite(prob)) {
-                console.warn(`Invalid probability at ${i}: ${prob}, setting to zero`);
-                continue;
-            }
-            
-            norm += prob;
-            totalProb += prob;
-            packetCenter += this.x[i] * prob;
-            
-            // Classify regions more conservatively to avoid edge effects
-            if (this.x[i] < -3) {  // Further left for reflection
-                leftProb += prob;
-            } else if (this.x[i] > 3) {  // Further right for transmission
-                rightProb += prob;
-            }
-        }
-        
-        norm *= this.dx;
-        leftProb *= this.dx;
-        rightProb *= this.dx;
-        totalProb *= this.dx;
-        
-        // Handle NaN in integrated values
-        if (isNaN(norm) || !isFinite(norm)) {
-            console.warn("NaN in norm calculation");
-            norm = 1.0;
-        }
-        
-        if (isNaN(leftProb) || !isFinite(leftProb)) {
-            console.warn("NaN in leftProb calculation");
-            leftProb = 0.0;
-        }
-        
-        if (isNaN(rightProb) || !isFinite(rightProb)) {
-            console.warn("NaN in rightProb calculation");
-            rightProb = 0.0;
-        }
-        
-        // Calculate packet center with safety check
-        if (totalProb > 1e-10) {
-            packetCenter = (packetCenter * this.dx) / totalProb;
-            if (isNaN(packetCenter) || !isFinite(packetCenter)) {
-                packetCenter = this.x0; // Fall back to initial position
-            }
-        } else {
-            packetCenter = this.x0;
-        }
-        
-        // Update measurements with bounds checking
-        this.reflection = Math.max(0, Math.min(1, leftProb));
-        this.transmission = Math.max(0, Math.min(1, rightProb));
-        this.packetCenter = packetCenter;
-        this.conservationValue = this.reflection + this.transmission;
-        
-        // Additional conservation check and correction
-        if (this.conservationValue > 1.1) {
-            console.warn(`Conservation violation: R+T=${this.conservationValue.toFixed(3)}, normalizing...`);
-            const scale = 1.0 / this.conservationValue;
-            this.reflection *= scale;
-            this.transmission *= scale;
-            this.conservationValue = 1.0;
-        }
-        
-        // Final NaN checks
-        if (isNaN(this.reflection)) {
-            console.warn("NaN in reflection, setting to 0");
-            this.reflection = 0;
-        }
-        if (isNaN(this.transmission)) {
-            console.warn("NaN in transmission, setting to 0");  
-            this.transmission = 0;
-        }
-        
-        // Debug output for problematic cases
-        if (this.currentStep % 100 === 0) {
-            console.log(`Step ${this.currentStep}: R=${this.reflection.toFixed(4)}, T=${this.transmission.toFixed(4)}, norm=${norm.toFixed(4)}, center=${packetCenter.toFixed(2)}`);
-        }
+        requestAnimationFrame(() => this.animate());
     }
     
     updateDisplays() {
-        // Helper function to safely format numbers
-        const safeFormat = (value, decimals = 3) => {
-            if (isNaN(value) || !isFinite(value)) {
-                return "0.000";
-            }
-            return value.toFixed(decimals);
-        };
-        
-        const elements = {
-            energyValue: safeFormat(this.energy, 1),
-            widthValue: safeFormat(this.sigma, 1),
-            startPosValue: safeFormat(this.x0, 1),
-            potentialHeightValue: safeFormat(this.potentialHeight, 1),
-            potentialWidthValue: safeFormat(this.potentialWidth, 1),
-            timeStepValue: safeFormat(this.dt, 2),
-            energyRegime: this.energyRegime || "E > V₀",
-            kLeftValue: safeFormat(this.k, 3),
-            kRightValue: this.energyRegime === "E < V₀" ? `i${safeFormat(this.kPrime, 3)}` : safeFormat(this.kPrime, 3),
-            theoreticalR: safeFormat(this.theoreticalR, 3),
-            theoreticalT: safeFormat(this.theoreticalT, 3),
-            reflectionValue: safeFormat(this.reflection, 3),
-            transmissionValue: safeFormat(this.transmission, 3),
-            conservationValue: safeFormat(this.conservationValue, 3)
-        };
-        
-        for (const [id, value] of Object.entries(elements)) {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = value;
-            } else {
-                console.warn(`Element ${id} not found`);
-            }
+        // Determine regime
+        let regime = '';
+        if (this.potentialType === 'step') {
+            regime = this.energy > this.V0 ? 'Classical' : 'Total Reflection';
+        } else if (this.potentialType === 'barrier') {
+            regime = this.energy > this.V0 ? 'Over Barrier' : 
+                    this.energy > 0 ? 'Tunneling' : 'Bound';
+        } else if (this.potentialType === 'well') {
+            regime = this.energy > 0 ? 'Scattering' : 'Bound State';
+        } else if (this.potentialType === 'harmonic') {
+            regime = 'Oscillator';
         }
         
-        // Debug output for theory values
-        console.log(`Display update: Theory R=${safeFormat(this.theoreticalR, 3)}, T=${safeFormat(this.theoreticalT, 3)}, Regime=${this.energyRegime}`);
+        document.getElementById('energyRegime').textContent = regime;
+        document.getElementById('theoreticalR').textContent = this.theoreticalR.toFixed(3);
+        document.getElementById('theoreticalT').textContent = this.theoreticalT.toFixed(3);
+        document.getElementById('reflectionValue').textContent = this.reflection.toFixed(3);
+        document.getElementById('transmissionValue').textContent = this.transmission.toFixed(3);
+        document.getElementById('conservationValue').textContent = this.norm.toFixed(3);
         
-        // Color-code conservation to help identify issues
-        const conservationElement = document.getElementById('conservationValue');
-        if (conservationElement) {
-            const conservationVal = parseFloat(this.conservationValue);
-            if (Math.abs(conservationVal - 1.0) < 0.05) {
-                conservationElement.style.color = '#4caf50'; // Green for good conservation
-            } else {
-                conservationElement.style.color = '#ff5722'; // Red for poor conservation
-            }
+        // Color code norm
+        const normEl = document.getElementById('conservationValue');
+        if (Math.abs(this.norm - 1) < 0.01) {
+            normEl.style.color = '#4caf50';
+        } else if (Math.abs(this.norm - 1) < 0.05) {
+            normEl.style.color = '#ffc107';
+        } else {
+            normEl.style.color = '#f44336';
         }
     }
     
@@ -1246,198 +884,274 @@ class QuantumSandbox {
         const width = this.canvas.width;
         const height = this.canvas.height;
         
-        if (width === 0 || height === 0) return;
+        if (!width || !height) return;
         
-        // Clear canvas
-        ctx.clearRect(0, 0, width, height);
+        // Clear canvas with gradient background
+        const gradient = ctx.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, '#0a0e1a');
+        gradient.addColorStop(1, '#1a2332');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
         
-        // Calculate scales
-        const xScale = width / this.L;
-        const xOffset = width / 2;
-        const yScale = height * 0.3;
-        const waveOffset = height * 0.3;
-        const potOffset = height * 0.8;
+        // Setup proper scaling and centering
+        const margin = 40;
+        const plotWidth = width - 2 * margin;
+        const plotHeight = height - 2 * margin;
         
-        // Draw potential
-        ctx.strokeStyle = '#ff6b6b';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
+        // View window: focus on -20 to 20 (where action happens)
+        const viewXMin = -20;
+        const viewXMax = 20;
+        const viewRange = viewXMax - viewXMin;
         
-        let maxV = 0;
+        // Coordinate transformations
+        const xToCanvas = (x) => {
+            return margin + ((x - viewXMin) / viewRange) * plotWidth;
+        };
+        
+        // Y-axis positions for different components
+        const waveY = height * 0.35;  // Wavefunction position
+        const potY = height * 0.75;   // Potential baseline
+        
+        // Find max values for scaling
+        let maxProb = 0.0001;
+        let maxV = 0.0001;
         for (let i = 0; i < this.N; i++) {
-            if (isFinite(this.V[i])) {
-                maxV = Math.max(maxV, this.V[i]);
+            if (this.x[i] >= viewXMin && this.x[i] <= viewXMax) {
+                maxProb = Math.max(maxProb, this.prob[i]);
             }
+            maxV = Math.max(maxV, Math.abs(this.V[i]));
         }
-        maxV = Math.max(maxV, 0.1); // Ensure non-zero for scaling
+        maxV = Math.max(maxV, Math.abs(this.energy) * 1.5, Math.abs(this.V0) * 1.5);
         
-        for (let i = 0; i < this.N; i++) {
-            const x = this.x[i] * xScale + xOffset;
-            const potValue = isFinite(this.V[i]) ? this.V[i] : 0;
-            const y = potOffset - (potValue / maxV) * yScale * 0.4;
-            
-            if (isFinite(x) && isFinite(y)) {
-                if (i === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
-            }
-        }
-        ctx.stroke();
-        
-        // Draw energy line
-        const energyY = potOffset - (this.energy / maxV) * yScale * 0.4;
-        ctx.strokeStyle = '#ffeb3b';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]);
-        ctx.beginPath();
-        ctx.moveTo(0, energyY);
-        ctx.lineTo(width, energyY);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        
-        // Draw step divider
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        // Draw grid
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
         ctx.lineWidth = 1;
-        ctx.setLineDash([3, 3]);
+        
+        // Vertical grid lines
+        for (let x = -20; x <= 20; x += 5) {
+            ctx.beginPath();
+            ctx.moveTo(xToCanvas(x), margin);
+            ctx.lineTo(xToCanvas(x), height - margin);
+            ctx.stroke();
+        }
+        
+        // Horizontal grid lines
+        for (let i = 0; i <= 4; i++) {
+            const y = margin + i * plotHeight / 4;
+            ctx.beginPath();
+            ctx.moveTo(margin, y);
+            ctx.lineTo(width - margin, y);
+            ctx.stroke();
+        }
+        
+        // Draw main axes
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        
+        // X-axis at wavefunction baseline
         ctx.beginPath();
-        ctx.moveTo(xOffset, 0);
-        ctx.lineTo(xOffset, height);
+        ctx.moveTo(margin, waveY);
+        ctx.lineTo(width - margin, waveY);
+        ctx.stroke();
+        
+        // X-axis at potential baseline
+        ctx.beginPath();
+        ctx.moveTo(margin, potY);
+        ctx.lineTo(width - margin, potY);
+        ctx.stroke();
+        
+        // Y-axis at x=0
+        const x0Canvas = xToCanvas(0);
+        ctx.beginPath();
+        ctx.moveTo(x0Canvas, margin);
+        ctx.lineTo(x0Canvas, height - margin);
+        ctx.stroke();
+        
+        // Draw potential with better visibility
+        ctx.strokeStyle = '#ff5722';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = '#ff5722';
+        ctx.shadowBlur = 5;
+        ctx.beginPath();
+        
+        let potentialDrawn = false;
+        for (let i = 0; i < this.N; i++) {
+            if (this.x[i] < viewXMin || this.x[i] > viewXMax) continue;
+            
+            const x = xToCanvas(this.x[i]);
+            const y = potY - (this.V[i] / maxV) * plotHeight * 0.25;
+            
+            if (!potentialDrawn) {
+                ctx.moveTo(x, y);
+                potentialDrawn = true;
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        
+        // Fill under potential for better visibility
+        if (this.potentialType === 'well' && this.V0 < 0) {
+            ctx.fillStyle = 'rgba(255, 87, 34, 0.1)';
+            ctx.beginPath();
+            ctx.moveTo(xToCanvas(viewXMin), potY);
+            for (let i = 0; i < this.N; i++) {
+                if (this.x[i] < viewXMin || this.x[i] > viewXMax) continue;
+                const x = xToCanvas(this.x[i]);
+                const y = potY - (this.V[i] / maxV) * plotHeight * 0.25;
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(xToCanvas(viewXMax), potY);
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // Draw energy level
+        ctx.strokeStyle = '#ffc107';
+        ctx.lineWidth = 2;
+        ctx.shadowColor = '#ffc107';
+        ctx.shadowBlur = 3;
+        ctx.setLineDash([8, 4]);
+        const energyY = potY - (this.energy / maxV) * plotHeight * 0.25;
+        ctx.beginPath();
+        ctx.moveTo(margin, energyY);
+        ctx.lineTo(width - margin, energyY);
         ctx.stroke();
         ctx.setLineDash([]);
+        ctx.shadowBlur = 0;
         
-        // Draw wavefunction
-        ctx.strokeStyle = '#4fc3f7';
-        ctx.lineWidth = 3;
+        // Draw probability density |ψ|²
+        ctx.fillStyle = 'rgba(0, 188, 212, 0.2)';
+        ctx.strokeStyle = '#00bcd4';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#00bcd4';
+        ctx.shadowBlur = 8;
+        
         ctx.beginPath();
-        
-        let maxProb = 0;
-        const probDensity = new Float32Array(this.N);
-        for (let i = 0; i < this.N; i++) {
-            probDensity[i] = this.psi_real[i] * this.psi_real[i] + this.psi_imag[i] * this.psi_imag[i];
-            if (isFinite(probDensity[i])) {
-                maxProb = Math.max(maxProb, probDensity[i]);
-            } else {
-                probDensity[i] = 0; // Replace NaN/Inf with zero
-            }
-        }
-        maxProb = Math.max(maxProb, 0.001); // Ensure non-zero for scaling
+        ctx.moveTo(margin, waveY);
         
         for (let i = 0; i < this.N; i++) {
-            const x = this.x[i] * xScale + xOffset;
-            const y = waveOffset - (probDensity[i] / maxProb) * yScale;
+            if (this.x[i] < viewXMin || this.x[i] > viewXMax) continue;
             
-            // Safety check for coordinates
-            if (isFinite(x) && isFinite(y)) {
-                if (i === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
-            }
+            const x = xToCanvas(this.x[i]);
+            const probHeight = (this.prob[i] / maxProb) * plotHeight * 0.2;
+            const y = waveY - probHeight;
+            ctx.lineTo(x, y);
         }
-        ctx.stroke();
         
-        // Fill under wavefunction
-        ctx.fillStyle = 'rgba(79, 195, 247, 0.3)';
-        ctx.beginPath();
-        for (let i = 0; i < this.N; i++) {
-            const x = this.x[i] * xScale + xOffset;
-            const y = waveOffset - (probDensity[i] / maxProb) * yScale;
-            
-            if (i === 0) {
-                ctx.moveTo(x, waveOffset);
-                ctx.lineTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
-        }
-        ctx.lineTo(width, waveOffset);
+        ctx.lineTo(width - margin, waveY);
         ctx.closePath();
         ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
         
-        // Draw real parts with different colors
-        ctx.lineWidth = 2;
-        ctx.globalAlpha = 0.8;
-        
-        // Left region
-        ctx.strokeStyle = '#81c784';
+        // Draw real part of wavefunction (thinner, more subtle)
+        ctx.strokeStyle = 'rgba(76, 175, 80, 0.8)';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        let leftStarted = false;
+        
+        let realDrawn = false;
         for (let i = 0; i < this.N; i++) {
-            if (this.x[i] >= 0) break;
-            const x = this.x[i] * xScale + xOffset;
-            const realValue = isFinite(this.psi_real[i]) ? this.psi_real[i] : 0;
-            const y = waveOffset - (realValue / Math.sqrt(maxProb)) * yScale * 0.5;
+            if (this.x[i] < viewXMin || this.x[i] > viewXMax) continue;
             
-            if (isFinite(x) && isFinite(y)) {
-                if (!leftStarted) {
-                    ctx.moveTo(x, y);
-                    leftStarted = true;
-                } else {
-                    ctx.lineTo(x, y);
-                }
+            const x = xToCanvas(this.x[i]);
+            const realHeight = (this.psi[2 * i] / Math.sqrt(maxProb)) * plotHeight * 0.15;
+            const y = waveY - realHeight;
+            
+            if (!realDrawn) {
+                ctx.moveTo(x, y);
+                realDrawn = true;
+            } else {
+                ctx.lineTo(x, y);
             }
         }
         ctx.stroke();
         
-        // Right region
-        ctx.strokeStyle = this.energyRegime === "E < V₀" ? '#f44336' : '#ff9800';
-        ctx.beginPath();
-        let rightStarted = false;
-        for (let i = 0; i < this.N; i++) {
-            if (this.x[i] <= 0) continue;
-            const x = this.x[i] * xScale + xOffset;
-            const realValue = isFinite(this.psi_real[i]) ? this.psi_real[i] : 0;
-            const y = waveOffset - (realValue / Math.sqrt(maxProb)) * yScale * 0.5;
-            
-            if (isFinite(x) && isFinite(y)) {
-                if (!rightStarted) {
-                    ctx.moveTo(x, y);
-                    rightStarted = true;
-                } else {
-                    ctx.lineTo(x, y);
-                }
-            }
+        // Draw measurement regions
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        
+        // Left measurement region
+        ctx.fillRect(margin, margin, xToCanvas(-5) - margin, plotHeight);
+        ctx.strokeRect(margin, margin, xToCanvas(-5) - margin, plotHeight);
+        
+        // Right measurement region
+        ctx.fillRect(xToCanvas(5), margin, width - margin - xToCanvas(5), plotHeight);
+        ctx.strokeRect(xToCanvas(5), margin, width - margin - xToCanvas(5), plotHeight);
+        ctx.setLineDash([]);
+        
+        // Draw potential type label
+        ctx.fillStyle = '#ff5722';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        let potLabel = '';
+        switch(this.potentialType) {
+            case 'step': potLabel = 'Step Potential'; break;
+            case 'barrier': potLabel = 'Rectangular Barrier'; break;
+            case 'well': potLabel = 'Rectangular Well'; break;
+            case 'harmonic': potLabel = 'Harmonic Oscillator'; break;
         }
-        ctx.stroke();
+        ctx.fillText(potLabel, width / 2, margin - 10);
         
-        ctx.globalAlpha = 1.0;
-        
-        // Essential numerical labels only
+        // Draw axis labels
         ctx.fillStyle = 'white';
-        ctx.font = '11px Courier New';
-        ctx.fillText('V = 0', 20, potOffset - yScale * 0.5);
-        ctx.fillText(`V₀ = ${this.potentialHeight.toFixed(1)}`, xOffset + 20, potOffset - yScale * 0.5);
-        ctx.fillText(`E = ${this.energy.toFixed(1)}`, width - 80, energyY - 8);
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
         
-        // Basic info only
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.font = '11px Courier New';
-        ctx.fillText(`Time: ${this.time.toFixed(1)}`, 10, height - 25);
-        ctx.fillText(`${this.energyRegime}`, 10, height - 10);
+        // X-axis labels
+        for (let x = -20; x <= 20; x += 10) {
+            ctx.fillText(x.toString(), xToCanvas(x), height - margin + 20);
+        }
+        ctx.fillText('Position x', width / 2, height - 10);
+        
+        // Y-axis labels
+        ctx.textAlign = 'left';
+        ctx.fillText('|ψ|²', margin - 30, waveY);
+        ctx.fillText('V(x)', margin - 30, potY);
+        
+        // Draw info panel
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(width - 180, 10, 170, 90);
+        
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(width - 180, 10, 170, 90);
+        
+        ctx.fillStyle = '#00bcd4';
+        ctx.font = 'bold 11px Courier New';
+        ctx.textAlign = 'left';
+        ctx.fillText('Simulation Info', width - 170, 28);
+        
+        ctx.fillStyle = 'white';
+        ctx.font = '10px Courier New';
+        ctx.fillText(`Time: ${this.time.toFixed(2)}`, width - 170, 45);
+        ctx.fillText(`E = ${this.energy.toFixed(2)}`, width - 170, 60);
+        ctx.fillText(`V₀ = ${this.V0.toFixed(2)}`, width - 170, 75);
+        ctx.fillText(`Frame: ${this.frame}`, width - 170, 90);
+        
+        // Draw measurement labels
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.font = '9px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('R', xToCanvas(-10), margin - 5);
+        ctx.fillText('T', xToCanvas(10), margin - 5);
     }
 }
 
-// Initialize the simulation with error handling
+// Initialize simulation
 try {
-    console.log("Starting Quantum Sandbox initialization...");
-    const quantumSim = new QuantumSandbox();
-    window.quantumSim = quantumSim; // For debugging
-    console.log("Quantum Sandbox created successfully!");
+    const sim = new AccurateQuantumSimulation();
+    window.quantumSim = sim;
+    console.log("Quantum simulation initialized successfully!");
 } catch (error) {
-    console.error("Failed to create Quantum Sandbox:", error);
-    // Show error message to user
-    const container = document.getElementById('simulation-container');
-    if (container) {
-        container.innerHTML = `
-            <div style="padding: 20px; color: red; font-family: monospace;">
-                <h3>Error Loading Quantum Simulation</h3>
-                <p>There was an error initializing the quantum mechanics simulation.</p>
-                <p>Error: ${error.message}</p>
-                <p>Please refresh the page and try again.</p>
-            </div>
-        `;
-    }
+    console.error("Failed to initialize quantum simulation:", error);
+    container.innerHTML = `
+        <div style="padding: 20px; color: red;">
+            <h3>Error Loading Simulation</h3>
+            <p>${error.message}</p>
+        </div>
+    `;
 }
