@@ -1,0 +1,5 @@
+Recode Jackson's thermo sim into the website
+N-body gravitational simulation - Start with 3-body problems, scale to hundreds of particles
+Solar system with realistic orbits - Include perturbations, Lagrange points
+Make live demos of pretrained shearnet and deconvnet on cached images
+Real-time raytracing for different optical phenomena
