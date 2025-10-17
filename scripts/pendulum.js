@@ -583,7 +583,7 @@ class PendulumMotion {
             ctx.strokeStyle = '#0000cc';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.arc(pivotX, pivotY, arcRadius, Math.PI/2, Math.PI/2 + this.angle, this.angle < 0);
+            ctx.arc(pivotX, pivotY, arcRadius, Math.PI/2 - this.angle, Math.PI/2, this.angle < 0);
             ctx.stroke();
             
             ctx.fillStyle = '#0000cc';

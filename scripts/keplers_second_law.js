@@ -572,7 +572,7 @@ class KeplersLaws {
         ctx.lineWidth = 2;
         ctx.setLineDash([5, 5]);
         ctx.beginPath();
-        ctx.ellipse(centerX + c, centerY, a, b, 0, 0, Math.PI * 2);
+        ctx.ellipse(centerX + c, centerY, a, a, 0, 0, Math.PI * 2);
         ctx.stroke();
         ctx.setLineDash([]);
         
